@@ -97,18 +97,18 @@ res.send({todo});
 })
 
 app.post('/users', (req, res) => {
-  var body = _.pick(req.body, ['email', 'password']);
-  var user = new User({
+  var body = _.pick(req.body, ['email', 'password']); // select only email and password fields from form
+  var user = new User({ // create new user object containing the relevant information from above
     email:body.email,
     password:body.password
   })
 
-  user.save().then(() => {
-    return user.generateAuthToken()
-  }).then((token) => {
-    res.header('x-auth', token).send(user);
+  user.save().then(() => { // take the user object and save it to mongoDB database
+    return user.generateAuthToken() // when save has completed generate token
+  }).then((token) => { // when token is generated, take the returned token (as argument)
+    res.header('x-auth', token).send(user); //send header to use containing token
   }), (e) => {
-    res.status(400).send(e);
+    res.status(400).send(e); //send error if doesn't work - problem here, should be catch, to catch any error in whole promise chain
   }
 })
 
