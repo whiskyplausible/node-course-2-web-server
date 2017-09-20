@@ -108,9 +108,9 @@ app.post('/users', (req, res) => {
     return user.generateAuthToken() // when save has completed generate token
   }).then((token) => { // when token is generated, take the returned token (as argument)
     res.header('x-auth', token).send(user); //send header to use containing token
-  }), (e) => {
+  }).catch((e) => {
     res.status(400).send(e); //send error if doesn't work - problem here, should be catch, to catch any error in whole promise chain
-  }
+  })
 })
 
 
