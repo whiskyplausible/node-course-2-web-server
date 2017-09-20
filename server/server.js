@@ -4,6 +4,7 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var _ = require('lodash')
 
+var {authenticate} = require('./middleware/authenticate')
 var {mongoose} = require('./db/mongoose.js')
 var {Todo} = require('./models/todo.js')
 var {User} = require('./models/user.js')
@@ -111,6 +112,13 @@ app.post('/users', (req, res) => {
     res.status(400).send(e); //send error if doesn't work - problem here, should be catch, to catch any error in whole promise chain
   }
 })
+
+
+
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user);
+})
+
 
 app.listen(port, () => {
   console.log(`Started on port ${port}`)

@@ -33,7 +33,9 @@ var UserSchema = new mongoose.Schema({
 
 })
 
-UserSchema.methods.toJSON = function () {
+UserSchema.methods.toJSON = function () { // This is never explicity called, it is called by res.send(user)
+                                          // in server.js, this calls JSON.stringify, which then calls built in toJSON
+                                          // the built in toJSON is overridden by this.
   var user = this;
   var userObject = user.toObject()
 
@@ -47,11 +49,29 @@ UserSchema.methods.generateAuthToken = function () {
   console.log(this)
   user.tokens.push({access, token})//add the token into this user object array (does this go back into original this, or is it a local copy for this function?)
 
-  return user.save().then((resolve) => { //so this is the main function return will return a promise (that needs to be resolved)?
+  return user.save().then(() => { //so this is the main function return will return a promise (that needs to be resolved)?
     console.log("token inside function ", token)
-    resolve(token); //the promise will then return this token when complete, maybe done so that we don't get the token until it has been written into the database.
+    return token; //the promise will then return this token when complete, maybe done so that we don't get the token until it has been written into the database.
   })
 
+}
+
+UserSchema.statics.findByToken = function (token) {
+  var User = this;
+  var decoded;
+
+ try {
+   decoded = jwt.verify(token, 'abc123');
+
+ } catch(e) {
+return Promise.reject();
+ }
+
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  })
 }
 
 var User = mongoose.model('User', UserSchema);
