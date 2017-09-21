@@ -46,7 +46,9 @@ UserSchema.methods.toJSON = function () { // This is never explicity called, it 
 UserSchema.methods.generateAuthToken = function () {
   var user = this; //this will be called from an already populated user object (i.e. with password and username), so this object will be passed on here
   var access = 'auth';
+console.log("generating token....1")
   var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString() // create signiture using user id (obviously not with username/email)
+  console.log("generating token....2")
   console.log(this)
   user.tokens.push({access, token})//add the token into this user object array (does this go back into original this, or is it a local copy for this function?)
 
@@ -90,9 +92,31 @@ if ( user.isModified('password') ) {
 
   })
 } else {
-  next()
+  next();
 }
 })
+
+UserSchema.statics.findByCredentials = function(email, password) {
+  var User = this;
+
+  return User.findOne({email}).then((user) => {
+    if (!user) {
+      return Promise.reject();
+    }
+
+    return new Promise((resolve, reject) => {
+
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          console.log("password OK *****")
+          resolve(user);
+        } else {
+        reject("password not OK with bcrypt");
+      }
+      })
+    })
+  })
+}
 
 var User = mongoose.model('User', UserSchema);
 module.exports = {User}

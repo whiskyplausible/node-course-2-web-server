@@ -3,6 +3,7 @@ require('./config/config')
 var express = require('express')
 var bodyParser = require('body-parser')
 var _ = require('lodash')
+var bcrypt = require('bcryptjs')
 
 var {authenticate} = require('./middleware/authenticate')
 var {mongoose} = require('./db/mongoose.js')
@@ -31,7 +32,10 @@ app.post('/todos', (req, res) => {
 
 app.get('/todos', (req, res) => {
   Todo.find().then((todos) => {
+
     res.send({todos});
+
+
   }, (e) => {
     res.status(400).send(e);
 
@@ -119,6 +123,24 @@ app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 })
 
+app.post('/users/login', (req,res) => {
+    var body = _.pick(req.body, ['email', 'password']);
+
+    User.findByCredentials(body.email, body.password).then((user) => {
+      console.log("found user **************", user);
+
+      return user.generateAuthToken().then((token) =>
+    {
+      console.log("all OK ************")
+        res.header('x-auth', token).send(user);
+
+    })
+
+    }).catch((e) => {
+      console.log("something went wrong...")
+      res.status(400).send(e);
+    })
+})
 
 app.listen(port, () => {
   console.log(`Started on port ${port}`)
