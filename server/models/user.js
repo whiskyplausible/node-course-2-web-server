@@ -49,7 +49,7 @@ UserSchema.methods.generateAuthToken = function () {
 
   var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString() // create signiture using user id (obviously not with username/email)
 
-  
+
   user.tokens.push({access, token})//add the token into this user object array (does this go back into original this, or is it a local copy for this function?)
 
   return user.save().then(() => { //so this is the main function return will return a promise (that needs to be resolved)?
@@ -115,6 +115,17 @@ UserSchema.statics.findByCredentials = function(email, password) {
       }
       })
     })
+  })
+}
+
+UserSchema.methods.removeToken = function (token) {
+
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: {token}
+          }
   })
 }
 
